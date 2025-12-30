@@ -78,7 +78,7 @@ Follow the prompts:
 
 Once authenticated, use these tools directly in Claude Desktop:
 - `get_accounts` - View all your financial accounts
-- `get_transactions` - Recent transactions with filtering
+- `get_transactions` - Recent transactions with filtering (includes tags and account mask when requested)
 - `get_budgets` - Budget information and spending
 - `get_cashflow` - Income/expense analysis
 
@@ -111,7 +111,7 @@ Once authenticated, use these tools directly in Claude Desktop:
 | `setup_authentication` | Get setup instructions | None |
 | `check_auth_status` | Check authentication status | None |
 | `get_accounts` | Get all financial accounts | None |
-| `get_transactions` | Get transactions with filtering | `limit`, `offset`, `start_date`, `end_date`, `account_id` |
+| `get_transactions` | Get transactions with filtering | `limit`, `offset`, `start_date`, `end_date`, `account_id`, `include_account_mask` |
 | `get_budgets` | Get budget information | None |
 | `get_cashflow` | Get cashflow analysis | `start_date`, `end_date` |
 | `get_account_holdings` | Get investment holdings | `account_id` |
@@ -129,6 +129,8 @@ Use get_accounts to show me all my financial accounts
 ### Get Recent Transactions
 ```
 Show me my last 50 transactions using get_transactions with limit 50
+
+Include account mask and tags with get_transactions include_account_mask true
 ```
 
 ### Check Spending vs Budget

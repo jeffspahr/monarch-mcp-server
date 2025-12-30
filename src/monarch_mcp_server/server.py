@@ -190,6 +190,7 @@ def get_transactions(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     account_id: Optional[str] = None,
+    include_account_mask: bool = False,
 ) -> str:
     """
     Get transactions from Monarch Money.
@@ -200,6 +201,7 @@ def get_transactions(
         start_date: Start date in YYYY-MM-DD format
         end_date: End date in YYYY-MM-DD format
         account_id: Specific account ID to filter by
+        include_account_mask: Include account mask (last 4) by prefetching accounts
     """
     try:
 
@@ -215,13 +217,28 @@ def get_transactions(
             if account_id:
                 filters["account_id"] = account_id
 
-            return await client.get_transactions(limit=limit, offset=offset, **filters)
+            transactions = await client.get_transactions(limit=limit, offset=offset, **filters)
 
-        transactions = run_async(_get_transactions())
+            account_masks = {}
+            if include_account_mask:
+                accounts = await client.get_accounts()
+                for account in accounts.get("accounts", []):
+                    account_masks[account.get("id")] = account.get("mask")
+
+            return transactions, account_masks
+
+        transactions, account_masks = run_async(_get_transactions())
 
         # Format transactions for display
         transaction_list = []
         for txn in transactions.get("allTransactions", {}).get("results", []):
+            account = txn.get("account") or {}
+            account_id_value = account.get("id")
+            tags = [
+                tag.get("name")
+                for tag in txn.get("tags", [])
+                if tag.get("name")
+            ]
             transaction_info = {
                 "id": txn.get("id"),
                 "date": txn.get("date"),
@@ -230,11 +247,14 @@ def get_transactions(
                 "category": txn.get("category", {}).get("name")
                 if txn.get("category")
                 else None,
-                "account": txn.get("account", {}).get("displayName"),
+                "account": account.get("displayName"),
+                "account_id": account_id_value,
+                "account_mask": account_masks.get(account_id_value),
                 "merchant": txn.get("merchant", {}).get("name")
                 if txn.get("merchant")
                 else None,
-                "is_pending": txn.get("isPending", False),
+                "is_pending": txn.get("pending", False),
+                "tags": tags,
             }
             transaction_list.append(transaction_info)
 
